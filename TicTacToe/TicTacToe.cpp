@@ -126,7 +126,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-// Game constants and variables
+// Game constants and variables globalus
+#define P1COLOR RGB(0, 0, 0)
+#define P2COLOR RGB(64, 224, 208)
+#define SCORECOLOR RGB(0, 0, 0)
+#define WINLINECOLOR RGB(128, 128, 128)
+
 const int CELL_SIZE = 100;
 HBRUSH hbr1, hbr2;
 HICON hIcon1, hIcon2;
@@ -134,7 +139,8 @@ int playerTurn = 1;
 int gameBoard[9] = { 0 };
 int winner = 0;
 int wins[3];
-int score[2] = { 0 }; // [0] = player 1 score, [2] player 2 score
+int score[2] = { 0, 0 }; // [0] = player 1 score, [2] player 2 score
+int gameCount = 1;
 
 BOOL GetGameBoardRect(HWND hwnd, RECT* pRect)
 {
@@ -278,7 +284,7 @@ void ShowTurn(HWND hwnd, HDC hdc)
     {
         rc.top = rc.bottom - 48;
         FillRect(hdc, &rc, (HBRUSH)GetStockObject(GRAY_BRUSH));
-        SetTextColor(hdc, playerTurn == 1 ? RGB(138, 43, 226) : RGB(0, 0, 255));
+        SetTextColor(hdc, playerTurn == 1 ? P1COLOR : P2COLOR);
         SetBkMode(hdc, TRANSPARENT);
         DrawText(hdc, pszTurnText, lstrlen(pszTurnText), &rc, DT_CENTER);
     }
@@ -325,8 +331,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
         {
-            hbr1 = CreateSolidBrush(RGB(255, 0, 0));
-            hbr2 = CreateSolidBrush(RGB(0, 0, 255));
+            hbr1 = CreateSolidBrush(P1COLOR);
+            hbr2 = CreateSolidBrush(P2COLOR);
 
             // Load player icons
             hIcon1 = LoadIcon(hInst, MAKEINTRESOURCE(IDI_PLAYER1));
@@ -347,6 +353,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         // Reset and start a new game
                         playerTurn = 1;
                         winner = 0;
+                        gameCount++;
                         ZeroMemory(gameBoard, sizeof(gameBoard));
                         // Force a paint message
                         InvalidateRect(hWnd, NULL, TRUE); // Post WM_PAINT to out windowProc. It get queued in out msg queue
@@ -380,11 +387,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             HDC hdc = GetDC(hWnd);
             if (hdc != NULL)
             {
-                // Test case to show indexes of squares when clicked
-                //WCHAR temp[100];
-                //wsprintf(temp, L"Index = %d", index);
-                //TextOut(hdc, xPos, yPos, temp, lstrlen(temp));
-
                 // Get cell dimension from its index
                 if (index != -1)
                 {
@@ -394,19 +396,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     {
                         gameBoard[index] = playerTurn;
                         
-                        //FillRect(hdc, &rcCell, (playerTurn == 1) ? hbr1 : hbr2);
                         DrawIconCentered(hdc, &rcCell, (playerTurn == 1) ? hIcon1 : hIcon2);
                         // Check if there is a winner
                         winner = GetWinner(wins);
 
                         if (winner == 1 || winner == 2)
                         {
+                            (winner == 1) ? score[0]++ : score[1]++;
                             ShowWinningLine(hWnd, hdc);
-                            
                             // There is a winner
                             MessageBox(hWnd, 
                                        (winner == 1) ? L"Player 1 is the winner!" : L"Player 2 is the winner!", 
-                                       L"You win!", 
+                                       L"There is a winner!", 
                                        MB_OK | MB_ICONINFORMATION);
                             playerTurn = 0;
                         }
@@ -456,16 +457,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     const WCHAR szPlayer1[] = L"Player 1";
                     const WCHAR szPlayer2[] = L"Player 2";
                     const WCHAR scText[] = L"SCORE";
+                    wchar_t scPlayer1[100];
+                    wchar_t scPlayer2[100];
+                    _itow_s(score[0], scPlayer1, 10);
+                    _itow_s(score[1], scPlayer2, 10);
 
                     SetBkMode(hdc, TRANSPARENT);
                     // Draw player 1 and 2 text
-                    SetTextColor(hdc, RGB(190, 0, 254));
+                    SetTextColor(hdc, P1COLOR);
                     TextOut(hdc, 16, 16, szPlayer1, ARRAYSIZE(szPlayer1));
                     DrawIcon(hdc, 24, 40, hIcon1);
-                    SetTextColor(hdc, RGB(0, 0, 255));
+                    SetTextColor(hdc, P2COLOR);
                     TextOut(hdc, rcClient.right - 72, 16, szPlayer2, ARRAYSIZE(szPlayer2));
                     DrawIcon(hdc, rcClient.right - 64, 40, hIcon2);
-
+                    // Draw score
+                    SetTextColor(hdc, SCORECOLOR);
+                    TextOut(hdc, ((rcClient.left + rcClient.right) / 2) - 20, 20, scText, ARRAYSIZE(scText));
+                    TextOut(hdc, ((rcClient.left + rcClient.right) / 2) - 10, 40, scPlayer1 , wcslen(scPlayer1));
+                    TextOut(hdc, ((rcClient.left + rcClient.right) / 2) + 10, 40, scPlayer2, wcslen(scPlayer2));
                     // Display turn
                     ShowTurn(hWnd, hdc);
                 }
