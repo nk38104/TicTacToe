@@ -45,16 +45,7 @@
     <Image Include="small.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="C:\Users\Nikola Kelava\Desktop\tictactoe_icons\x.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\..\..\Preuzimanja\images.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="C:\Users\Nikola Kelava\Desktop\tictactoe_icons\x.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="C:\Users\Nikola Kelava\Desktop\tictactoe_icons\o.ico">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\Tic Tac Toe Icons\x.ico">

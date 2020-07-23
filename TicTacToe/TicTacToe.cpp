@@ -199,7 +199,7 @@ LRESULT CALLBACK CBTProc(INT nCode, WPARAM wParam, LPARAM lParam)
 
 // My game macros and global variables
 #define P1COLOR RGB(0, 0, 0)
-#define P2COLOR RGB(64, 224, 208)
+#define P2COLOR RGB(65, 225, 220)
 #define SCORECOLOR RGB(0, 0, 0)
 
 const int CELL_SIZE = 100;
@@ -371,7 +371,7 @@ void DrawIconCentered(HDC hdc, RECT* pRect, HICON hIcon)
         int left = pRect->left + ((pRect->right - pRect->left) - ICON_WIDTH) / 2 - 8;
         int top = pRect->top + ((pRect->bottom - pRect->top) - ICON_HEIGHT) / 2 - 8;
 
-        DrawIconEx(hdc, left, top, hIcon, 50, 50, 0, NULL, DI_NORMAL);
+        DrawIconEx(hdc, left, top, hIcon, 45, 45, 0, NULL, DI_NORMAL);
     }
 }
 
@@ -600,9 +600,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 SetBkMode(hdc, TRANSPARENT);
                 
                 // Display player 1 text 
-                DisplayPlayerText(hdc, 16, 16, 33, 50, szPlayer1);
+                DisplayPlayerText(hdc, 16, 15, 33, 55, szPlayer1);
                 // Display player 2 text
-                DisplayPlayerText(hdc, rcClient.right - 90, 16, rcClient.right - 68, 50, szPlayer2);
+                DisplayPlayerText(hdc, rcClient.right - 90, 15, rcClient.right - 68, 55, szPlayer2);
                 
                 // Display game count and score
                 DisplayGameNumberAndScore(hdc, rcClient, font);
