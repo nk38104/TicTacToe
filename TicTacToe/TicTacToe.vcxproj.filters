@@ -57,9 +57,6 @@
     <Image Include="C:\Users\Nikola Kelava\Desktop\tictactoe_icons\o.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="..\tic tac toe icons\icon3.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="..\Tic Tac Toe Icons\x.ico">
       <Filter>Resource Files</Filter>
     </Image>
@@ -70,6 +67,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\..\..\..\Preuzimanja\images.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\Tic Tac Toe Icons\tictactoe.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

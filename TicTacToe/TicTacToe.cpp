@@ -7,21 +7,27 @@
 #include <string>
 
 #define MAX_LOADSTRING 100
-#define WINSTARTX 600 // Window starting x position
-#define WINSTARTY 200 // Window starting y position
-#define WINHEIGHT 550 // Window height
-#define WINWIDTH 650 // Window width
+#define WINSTARTX 600                           // Window starting x position
+#define WINSTARTY 200                           // Window starting y position
+#define WINHEIGHT 550                           // Window height
+#define WINWIDTH 650                            // Window width
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+WCHAR szWindowClass[MAX_LOADSTRING];            // The main window class name
+HHOOK hhk;                                      // MsgBox hook
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+// My CBTMessageBox functions for centering MessageBox
+INT CBTMessageBox(HWND, LPSTR, LPSTR, UINT);
+LRESULT CALLBACK CBTProc(INT, WPARAM, LPARAM);
+void NewGameMsgBox(HWND&);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -99,8 +105,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance; // Store instance handle in our global variable
 
-    //HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-    //   CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
     HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
         WINSTARTX, WINSTARTY, WINWIDTH, WINHEIGHT, nullptr, nullptr, hInstance, nullptr);
 
@@ -115,6 +119,73 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
+INT CBTMessageBox(HWND hwnd, const WCHAR* lpText, const WCHAR* lpCaption, UINT uType)
+{
+    hhk = SetWindowsHookEx(WH_CBT, &CBTProc, 0, GetCurrentThreadId());
+    
+    return MessageBox(hwnd, lpText, lpCaption, uType);
+}
+
+LRESULT CALLBACK CBTProc(INT nCode, WPARAM wParam, LPARAM lParam)
+{
+    HWND  hParentWnd, hChildWnd;    // MsgBox is "child"
+    RECT  rParent, rChild, rDesktop;
+    POINT pCenter, pStart;
+    INT   nWidth, nHeight;
+
+    // Notification that a window is about to be activated
+    // Window handle is wParam
+    if (nCode == HCBT_ACTIVATE)
+    {
+        // Set window handles
+        hParentWnd = GetForegroundWindow();
+        hChildWnd = (HWND)wParam;
+
+        if ((hParentWnd != 0) &&
+            (hChildWnd != 0) &&
+            (GetWindowRect(GetDesktopWindow(), &rDesktop) != 0) &&
+            (GetWindowRect(hParentWnd, &rParent) != 0) &&
+            (GetWindowRect(hChildWnd, &rChild) != 0))
+        {
+            // Calculate message box dimensions
+            nWidth = (rChild.right - rChild.left);
+            nHeight = (rChild.bottom - rChild.top);
+
+            // Calculate parent window center point
+            pCenter.x = rParent.left + ((rParent.right
+                - rParent.left) / 2);
+            pCenter.y = rParent.top + ((rParent.bottom
+                - rParent.top) / 2);
+
+            // Calculate message box starting point
+            pStart.x = (pCenter.x - (nWidth / 2));
+            pStart.y = (pCenter.y - (nHeight / 2));
+
+            // Adjust if message box is off desktop
+            if (pStart.x < 0) pStart.x = 0;
+            if (pStart.y < 0) pStart.y = 0;
+            if (pStart.x + nWidth > rDesktop.right)
+                pStart.x = rDesktop.right - nWidth;
+            if (pStart.y + nHeight > rDesktop.bottom)
+                pStart.y = rDesktop.bottom - nHeight;
+
+            // Move message box
+            MoveWindow( hChildWnd,
+                        pStart.x, pStart.y,
+                        nWidth, nHeight,
+                        FALSE);
+        }
+        // Exit CBT hook
+        UnhookWindowsHookEx(hhk);
+    }
+    // Otherwise, continue with any possible chained hooks
+    else
+    {
+        CallNextHookEx(hhk, nCode, wParam, lParam);
+    }
+    return 0;
+}
+
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -126,7 +197,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-// Game constants and variables
+// My game macros and global variables
 #define P1COLOR RGB(0, 0, 0)
 #define P2COLOR RGB(64, 224, 208)
 #define SCORECOLOR RGB(0, 0, 0)
@@ -213,7 +284,6 @@ BOOL GetCellRect(HWND hWnd, int index, RECT* pRect)
         pRect->top = rcBoard.top + y * CELL_SIZE + 1;
         pRect->right = pRect->left + CELL_SIZE - 1;
         pRect->bottom = pRect->top + CELL_SIZE - 1;
-
         return TRUE;
     }
 
@@ -319,6 +389,7 @@ void ShowWinningLine(HWND hwnd, HDC hdc)
             DrawIconCentered(hdc, &rcWin, (winner == 1) ? hIcon1 : hIcon2);
         }
     }
+    
 }
 
 void ChangeFont(HDC& hdc, const int size, const WCHAR* font)
@@ -333,23 +404,6 @@ void ChangeFont(HDC& hdc, const int size, const WCHAR* font)
 
     hFont = CreateFontIndirect(&logFont);
     SelectObject(hdc, hFont);
-}
-
-void NewGameMsgBox(HWND& hWnd)
-{
-    int ret = MessageBox(hWnd, L"Do you want to start a new game?", L"New Game", MB_YESNO | MB_ICONQUESTION);
-
-    if (IDYES == ret)
-    {
-        // Reset and start a new game
-        playerTurn = 1;
-        winner = 0;
-        gameCount++;
-        ZeroMemory(gameBoard, sizeof(gameBoard));
-        // Force a paint message
-        InvalidateRect(hWnd, NULL, TRUE); // Post WM_PAINT to out windowProc. It get queued in out msg queue
-        UpdateWindow(hWnd); // Forces immediate handling of WM_PAINT
-    }
 }
 
 void DisplayPlayerText(HDC hdc, const int txtx, const int txty, const int iconx, const int icony, const WCHAR* text)
@@ -378,17 +432,40 @@ void DisplayGameNumberAndScore(HDC hdc, RECT rcClient, const WCHAR* font)
     TextOut(hdc, ((rcClient.left + rcClient.right) / 2) + 40, 15, gmCount, wcslen(gmCount));
     TextOut(hdc, ((rcClient.left + rcClient.right) / 2) - (20 + 12 * wcslen(scPlayer1)), 60, scPlayer1, wcslen(scPlayer1));
     TextOut(hdc, ((rcClient.left + rcClient.right) / 2) - 1, 56, L":", 1);
-    TextOut(hdc, ((rcClient.left + rcClient.right) / 2) + (7 + 12 * wcslen(scPlayer2)), 60, scPlayer2, wcslen(scPlayer2));
-
+    TextOut(hdc, ((rcClient.left + rcClient.right) / 2) + (17 + wcslen(scPlayer2)), 60, scPlayer2, wcslen(scPlayer2));
 }
 
-void ResultMsgBox(HWND hWnd, const WCHAR* text, const WCHAR* boxTitle)
+void ResultMsgBox(HWND hWnd, const WCHAR* MsgBoxText, const WCHAR* MsgBoxTitle)
 {
-    MessageBox(hWnd,
-        (winner == 1) ? L"Player 1 is the winner!" : L"Player 2 is the winner!",
-        L"There is a winner!",
-        MB_OK | MB_ICONINFORMATION);
+    CBTMessageBox(hWnd,
+                  MsgBoxText,
+                  MsgBoxTitle,
+                  MB_OK | MB_ICONINFORMATION);
     NewGameMsgBox(hWnd);
+}
+
+void NewGameMsgBox(HWND& hWnd)
+{
+    int ret = CBTMessageBox(hWnd, 
+                            L"Do you want to start a new game?", 
+                            L"New Game", 
+                            MB_YESNO | MB_ICONQUESTION);
+
+    if (IDYES == ret)
+    {
+        // Reset and start a new game
+        playerTurn = 1;
+        winner = 0;
+        gameCount++;
+        ZeroMemory(gameBoard, sizeof(gameBoard));
+        // Force a paint message
+        InvalidateRect(hWnd, NULL, TRUE); // Post WM_PAINT to out windowProc. It get queued in out msg queue
+        UpdateWindow(hWnd); // Forces immediate handling of WM_PAINT
+    }
+    else
+    {
+        DestroyWindow(hWnd);
+    }
 }
 
 // TODO:

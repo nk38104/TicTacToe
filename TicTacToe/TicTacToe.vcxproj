@@ -153,8 +153,8 @@
   <ItemGroup>
     <Image Include="..\..\..\..\Preuzimanja\images.ico" />
     <Image Include="..\..\..\Preuzimanja\images.ico" />
-    <Image Include="..\tic tac toe icons\icon3.ico" />
     <Image Include="..\Tic Tac Toe Icons\o.ico" />
+    <Image Include="..\Tic Tac Toe Icons\tictactoe.ico" />
     <Image Include="..\Tic Tac Toe Icons\x.ico" />
     <Image Include="..\Tic Tac Toe Icons\x.png" />
     <Image Include="C:\Users\Nikola Kelava\Desktop\tictactoe_icons\o.ico" />
