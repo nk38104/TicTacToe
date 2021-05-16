@@ -1,6 +1,6 @@
 # TicTacToe
 
-This is a simple Tic Tac Toe game created in C++. I wanted to take a beginner project and play a little bit more with C++ and learn a bit more about Forms. Just to get a hint about how things work with them.
+This is a simple Tic Tac Toe game created in C++. I wanted to take a beginner project and play a little bit more with C++ and learn a bit more about Forms. Just to get a hint about how they work.
 
 Game screen:
 
@@ -9,7 +9,7 @@ Game screen:
 
 # Layout
 
-As you can see on top-left and top-right side of the screen there is a player "profile" (player name, his playing logo\symbol).
+As you can see on top-left and top-right side of the screen there is a player "profile" (player name, his playing icon\symbol).
 Between them in the middle there is a game counter which counts how many games were played so far and bellow that there is a current score. 
 Game window is also responsive so you can change the size of the window, although I've set minimal height and width to be as starting height and width so you can't go less than that.
 On the bottom I've put a text which says whose turn it is so if players forget whose turn it is there is a simple way to find out.
